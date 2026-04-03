@@ -5,24 +5,21 @@ import pickle
 app = Flask(__name__)
 CORS(app)
 
-# Load model
+# Load model + vectorizer
 model, vectorizer = pickle.load(open("spam_model.pkl", "rb"))
+
+@app.route('/')
+def home():
+    return "Spam API is running"
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     message = data['message']
 
-    # Transform input
     transformed = vectorizer.transform([message])
-
     prediction = model.predict(transformed)[0]
 
     result = "Spam" if prediction == 1 else "Not Spam"
 
-    return jsonify({
-        "prediction": result
-    })
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return jsonify({"prediction": result})
