@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Shield • AI Message Analytics</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --bg-gradient: radial-gradient(circle at top right, #0F172A, #171923, #020617);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --success: #10B981;
+            --danger: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow-x: hidden;
+            padding: 1.5rem;
+        }
+
+        /* Ambient Glow Objects */
+        .glow {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(60px);
+        }
+        .glow-1 { top: -200px; left: -200px; }
+        .glow-2 { bottom: -200px; right: -200px; }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-box {
+            width: 56px;
+            height: 56px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom right, #FFFFFF, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 320px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .input-area {
+            margin-bottom: 2rem;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            resize: none;
+            transition: all 0.2s ease;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        textarea::placeholder {
+            color: #475569;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        button {
+            flex: 1;
+            background: #FFFFFF;
+            color: #0F172A;
+            border: none;
+            border-radius: 1rem;
+            padding: 1.15rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        button:hover {
+            background: #F1F5F9;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Result Section */
+        .result-panel {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            text-align: center;
+            display: none;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+        }
+
+        .result-panel.active {
+            display: block;
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Result States */
+        .result-panel.spam {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .result-panel.not-spam {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .result-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .prediction-text {
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        .spam .prediction-text { color: var(--danger); }
+        .not-spam .prediction-text { color: var(--success); }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0F172A;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #475569;
+        }
+
+        /* Icon (SVG) */
+        .shield-icon {
+            width: 24px;
+            height: 24px;
+            fill: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <main class="container">
+        <div class="card">
+            <div class="header">
+                <div class="logo-box">
+                    <svg class="shield-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 12c-2.67 0-8 1.33-8 4v2h16v-2c0-2.67-5.33-4-8-4z"/></svg>
+                </div>
+                <h1>Spam Shield AI</h1>
+                <p>Enterprise-grade message analysis powered by machine learning</p>
+            </div>
+
+            <div class="input-area">
+                <label class="input-label" for="message">Message Content</label>
+                <textarea id="message" placeholder="Type or paste the message here..."></textarea>
+            </div>
+
+            <div class="actions">
+                <button id="checkBtn" onclick="checkSpam()">
+                    <span id="btnText">Analyze Message</span>
+                    <div class="spinner" id="btnSpinner"></div>
+                </button>
+            </div>
+
+            <div class="result-panel" id="resultContainer">
+                <p class="result-title">Classification Result</p>
+                <h3 class="prediction-text" id="result">Analyzing...</h3>
+            </div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Spam Shield AI &bull; Protected by Advanced ML-Core v4.2
+        </div>
+    </main>
+
+    <script>
+        function checkSpam() {
+            const messageInput = document.getElementById("message");
+            const message = messageInput.value.trim();
+            const btn = document.getElementById("checkBtn");
+            const btnSpinner = document.getElementById("btnSpinner");
+            const btnText = document.getElementById("btnText");
+            const resultContainer = document.getElementById("resultContainer");
+            const resultDisplay = document.getElementById("result");
+
+            if (!message) {
+                messageInput.style.borderColor = "#EF4444";
+                messageInput.placeholder = "Please enter a message first...";
+                return;
+            }
+
+            // Reset UI state
+            messageInput.style.borderColor = "var(--glass-border)";
+            btn.disabled = true;
+            btnText.style.opacity = "0.5";
+            btnSpinner.style.display = "block";
+            resultContainer.classList.remove("active", "spam", "not-spam");
+
+            fetch("http://127.0.0.1:5000/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({message: message})
+            })
+            .then(res => res.json())
+            .then(data => {
+                const prediction = data.prediction;
+                resultDisplay.innerText = prediction;
+                
+                // Set result class based on prediction
+                if (prediction.toLowerCase().includes("spam")) {
+                    resultContainer.classList.add("spam");
+                    if (prediction === "Not Spam") { // Safety check for label
+                        resultContainer.classList.remove("spam");
+                        resultContainer.classList.add("not-spam");
+                    }
+                } else {
+                    resultContainer.classList.add("not-spam");
+                }
+
+                // Smoothly reveal
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btnText.style.opacity = "1";
+                    btnSpinner.style.display = "none";
+                    resultContainer.classList.add("active");
+                }, 600);
+            })
+            .catch(err => {
+                console.error(err);
+                btn.disabled = false;
+                btnText.innerText = "Error Connecting to API";
+                btnText.style.opacity = "1";
+                btnSpinner.style.display = "none";
+            });
+        }
+
+        // Handle Cmd/Ctrl + Enter
+        document.getElementById("message").addEventListener("keydown", (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                checkSpam();
+            }
+        });
+    </script>
+
+</body>
+</html>
