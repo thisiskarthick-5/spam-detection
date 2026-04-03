@@ -12,7 +12,7 @@ model, vectorizer = pickle.load(open("spam_model.pkl", "rb"))
 def home():
     return "Spam API is running"
 
-@app.route('/predict', methods=['POST'])
+@app.route('https://spam-detection-ajtk.onrender.com/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     message = data['message']
